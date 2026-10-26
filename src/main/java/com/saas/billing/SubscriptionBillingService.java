@@ -6,6 +6,7 @@ import com.saas.billing.domain.CustomerStatus;
 import com.saas.billing.domain.InvoiceStatus;
 import com.saas.billing.domain.Money;
 import com.saas.billing.domain.PromoCode;
+import com.saas.billing.port.NotificationService;
 import com.saas.billing.port.PaymentGateway;
 
 import java.math.BigDecimal;
@@ -18,7 +19,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import org.apache.commons.mail.SimpleEmail;
 
 public class SubscriptionBillingService {
 
@@ -27,10 +27,12 @@ public class SubscriptionBillingService {
     private static final String DB_PASS = "admin123";
 
     private final PaymentGateway payments;
+    private final NotificationService notifications;
     private final Clock clock;
 
-    public SubscriptionBillingService(PaymentGateway payments, Clock clock) {
+    public SubscriptionBillingService(PaymentGateway payments, NotificationService notifications, Clock clock) {
         this.payments = Objects.requireNonNull(payments, "payments não pode ser nulo");
+        this.notifications = Objects.requireNonNull(notifications, "notifications não pode ser nulo");
         this.clock = Objects.requireNonNull(clock, "clock não pode ser nulo");
     }
 
@@ -101,15 +103,7 @@ public class SubscriptionBillingService {
                 stmtInvoice.setString(3, InvoiceStatus.of(paymentSuccess).name());
                 stmtInvoice.executeUpdate();
 
-                SimpleEmail emailSender = new SimpleEmail();
-                emailSender.setHostName("smtp.empresa.com");
-                emailSender.setSmtpPort(587);
-                emailSender.setFrom("billing@empresa.com");
-                emailSender.setSubject("Sua Fatura Mensal");
-                emailSender.setMsg("Olá! Sua fatura foi processada no valor de " + calculatedPrice.formatted());
-                emailSender.addTo(email);
-                // emailSender.send();
-
+                notifications.sendInvoice(email, calculatedPrice);
                 logs.add("E-mail disparado para: " + email);
             }
         } catch (Exception e) {
