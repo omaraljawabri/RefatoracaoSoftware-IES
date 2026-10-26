@@ -4,6 +4,10 @@ Repositório da atividade de refatoração da disciplina Implantação e Entrega
 Parte do código legado `SubscriptionBillingService` da SaaS Billing Co. e chega a uma arquitetura
 de portas e adaptadores, sem mudar as regras de negócio.
 
+O diagnóstico do débito técnico, as regras de negócio preservadas, as refatorações aplicadas, as
+mudanças intencionais de comportamento e as métricas antes e depois estão no
+[RELATORIO.md](RELATORIO.md).
+
 ## Requisitos
 
 - Java 21
