@@ -107,4 +107,42 @@ class SubscriptionBillingServiceTest {
         assertTrue(invoices.saved().isEmpty());
         assertTrue(notifications.sent().isEmpty());
     }
+
+    @Test
+    @DisplayName("BLACKFRIDAY vale só em novembro, conforme a data do Clock")
+    void blackFridayDependeDoRelogio() {
+        BillingCommand comando = comando(CLIENTE, "100", ADESAO_RECENTE, "BLACKFRIDAY");
+
+        assertEquals(Money.of("70.00"), servico(FakePaymentGateway.approving(), LocalDate.of(2026, 11, 20))
+                .processMonthlyBilling(comando).amount());
+        assertEquals(Money.of("100.00"), servico(FakePaymentGateway.approving(), LocalDate.of(2026, 10, 31))
+                .processMonthlyBilling(comando).amount());
+    }
+
+    @Test
+    @DisplayName("Desconto de fidelidade usa a data do Clock para contar os meses de assinatura")
+    void fidelidadeDependeDoRelogio() {
+        BillingCommand comando = comando(CLIENTE, "100", LocalDate.of(2024, 9, 15), null);
+
+        assertEquals(Money.of("90.00"), servico(FakePaymentGateway.approving(), LocalDate.of(2026, 9, 15))
+                .processMonthlyBilling(comando).amount());
+        assertEquals(Money.of("85.00"), servico(FakePaymentGateway.approving(), LocalDate.of(2026, 10, 15))
+                .processMonthlyBilling(comando).amount());
+    }
+
+    @Test
+    @DisplayName("O valor cobrado, gravado e enviado é o mesmo valor calculado com descontos")
+    void valorComDescontoChegaAsPortas() {
+        FakePaymentGateway payments = FakePaymentGateway.approving();
+        BillingCommand comando = new BillingCommand(CLIENTE, Money.of("100"), LocalDate.of(2024, 9, 15),
+                0, null, true, "tok_visa");
+
+        BillingResult resultado = servico(payments, HOJE).processMonthlyBilling(comando);
+
+        assertEquals(Money.of("59.50"), resultado.amount());
+        assertEquals(Money.of("59.50"), payments.charges().get(0).amount());
+        assertEquals(Money.of("59.50"), invoices.saved().get(0).amount());
+        assertEquals(Money.of("59.50"), notifications.sent().get(0).amount());
+        assertEquals("Pagamento processado com sucesso: R$ 59,50", resultado.messages().get(0));
+    }
 }
