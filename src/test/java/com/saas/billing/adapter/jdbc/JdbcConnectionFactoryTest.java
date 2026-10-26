@@ -26,8 +26,8 @@ class JdbcConnectionFactoryTest {
     }
 
     @Test
-    @DisplayName("Cria a fábrica quando as três variáveis de ambiente estão definidas")
-    void criaComAmbienteCompleto() {
+    @DisplayName("fromEnvironment: cria a fábrica quando as três variáveis estão definidas")
+    void fromEnvironment_criaFabrica_quandoTresVariaveisDefinidas() {
         assertDoesNotThrow(() -> JdbcConnectionFactory.fromEnvironment(ambienteCompleto()));
     }
 
@@ -37,8 +37,8 @@ class JdbcConnectionFactoryTest {
             JdbcConnectionFactory.USER_VARIABLE,
             JdbcConnectionFactory.PASSWORD_VARIABLE
     })
-    @DisplayName("Falha com mensagem clara quando falta uma variável de ambiente")
-    void falhaSemVariavel(String variavel) {
+    @DisplayName("fromEnvironment: lança erro com o nome da variável quando ela está ausente")
+    void fromEnvironment_lancaErroComNomeDaVariavel_quandoVariavelAusente(String variavel) {
         Map<String, String> ambiente = ambienteCompleto();
         ambiente.remove(variavel);
 
@@ -48,8 +48,8 @@ class JdbcConnectionFactoryTest {
     }
 
     @Test
-    @DisplayName("Trata variável em branco como não definida")
-    void variavelEmBrancoNaoConta() {
+    @DisplayName("fromEnvironment: lança erro quando uma variável está em branco")
+    void fromEnvironment_lancaErro_quandoVariavelEmBranco() {
         Map<String, String> ambiente = ambienteCompleto();
         ambiente.put(JdbcConnectionFactory.PASSWORD_VARIABLE, "  ");
 
@@ -57,8 +57,8 @@ class JdbcConnectionFactoryTest {
     }
 
     @Test
-    @DisplayName("Falha de conexão vira InfrastructureException com a causa original")
-    void falhaDeConexaoViraInfrastructureException() {
+    @DisplayName("open: lança InfrastructureException com a causa original quando a conexão falha")
+    void open_lancaInfrastructureException_quandoConexaoFalha() {
         JdbcConnectionFactory fabrica = new JdbcConnectionFactory("jdbc:inexistente:teste", "u", "p");
 
         InfrastructureException erro = assertThrows(InfrastructureException.class, fabrica::open);
