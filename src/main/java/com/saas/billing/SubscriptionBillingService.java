@@ -17,7 +17,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 
 public class SubscriptionBillingService {
 
@@ -38,35 +37,39 @@ public class SubscriptionBillingService {
         this.clock = Objects.requireNonNull(clock, "clock não pode ser nulo");
     }
 
+    /**
+     * Processa a cobrança mensal de um cliente: calcula o valor, cobra no
+     * cartão, grava a fatura e envia o recibo.
+     *
+     * <p>Cliente inexistente não gera cobrança nem mensagem; cliente inativo tem
+     * a cobrança cancelada. Em ambos os casos o valor calculado é devolvido.</p>
+     */
     public BillingResult processMonthlyBilling(BillingCommand command) {
-
         List<String> messages = new ArrayList<>();
-
         Money amount = pricing.calculate(command, LocalDate.now(clock));
 
         try {
-            Optional<Customer> customer = customers.findById(command.customerId());
-
-            if (customer.isPresent()) {
-                String email = customer.get().email();
-
-                if (!customer.get().isActive()) {
-                    messages.add("Cliente inativo. Cobrança cancelada: " + command.customerId());
-                    return new BillingResult(amount, messages);
-                }
-
-                boolean paymentSuccess = charge(command, amount, messages);
-
-                invoices.save(new Invoice(command.customerId(), amount, InvoiceStatus.of(paymentSuccess)));
-
-                notifications.sendInvoice(email, amount);
-                messages.add("E-mail disparado para: " + email);
-            }
+            customers.findById(command.customerId())
+                    .ifPresent(customer -> bill(customer, command, amount, messages));
         } catch (Exception e) {
             messages.add("Erro fatal no processamento: " + e.getMessage());
         }
 
         return new BillingResult(amount, messages);
+    }
+
+    /** Cobra um cliente encontrado: pagamento, fatura e recibo, nessa ordem. */
+    private void bill(Customer customer, BillingCommand command, Money amount, List<String> messages) {
+        if (!customer.isActive()) {
+            messages.add("Cliente inativo. Cobrança cancelada: " + command.customerId());
+            return;
+        }
+
+        boolean paymentSuccess = charge(command, amount, messages);
+        invoices.save(new Invoice(command.customerId(), amount, InvoiceStatus.of(paymentSuccess)));
+
+        notifications.sendInvoice(customer.email(), amount);
+        messages.add("E-mail disparado para: " + customer.email());
     }
 
     /** Cobra no cartão e registra a mensagem de sucesso ou de falha do pagamento. */
