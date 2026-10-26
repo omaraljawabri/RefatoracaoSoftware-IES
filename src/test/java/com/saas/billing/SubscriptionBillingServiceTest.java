@@ -51,8 +51,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Pagamento aprovado: cobra, grava fatura PAID, envia o recibo e registra as mensagens")
-    void pagamentoAprovado() {
+    @DisplayName("processMonthlyBilling: cobra, grava fatura PAID e envia o recibo quando o pagamento é aprovado")
+    void processMonthlyBilling_cobraGravaPaidEEnviaRecibo_quandoPagamentoAprovado() {
         FakePaymentGateway payments = FakePaymentGateway.approving();
 
         BillingResult resultado = servico(payments, HOJE)
@@ -68,8 +68,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Pagamento recusado: grava fatura FAILED e ainda envia o recibo, como o código legado")
-    void pagamentoRecusado() {
+    @DisplayName("processMonthlyBilling: grava fatura FAILED e ainda envia o recibo quando o pagamento é recusado (como no legado)")
+    void processMonthlyBilling_gravaFailedEEnviaRecibo_quandoPagamentoRecusado() {
         BillingResult resultado = servico(FakePaymentGateway.declining(), HOJE)
                 .processMonthlyBilling(comando(CLIENTE, "100", ADESAO_RECENTE, null));
 
@@ -81,8 +81,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Cliente inativo: cancela sem cobrar, sem fatura e sem recibo, mas devolve o valor calculado")
-    void clienteInativo() {
+    @DisplayName("processMonthlyBilling: cancela sem cobrar, gravar nem notificar quando o cliente está inativo")
+    void processMonthlyBilling_cancelaSemCobrar_quandoClienteInativo() {
         customers.add(new Customer("cus_2", "bia@exemplo.com", CustomerStatus.INACTIVE));
         FakePaymentGateway payments = FakePaymentGateway.approving();
 
@@ -97,8 +97,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Cliente inexistente: não faz nada e não gera nenhuma mensagem, como o código legado")
-    void clienteInexistente() {
+    @DisplayName("processMonthlyBilling: não cobra nem gera mensagem quando o cliente não existe (como no legado)")
+    void processMonthlyBilling_naoFazNada_quandoClienteInexistente() {
         FakePaymentGateway payments = FakePaymentGateway.approving();
 
         BillingResult resultado = servico(payments, HOJE)
@@ -112,8 +112,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("BLACKFRIDAY vale só em novembro, conforme a data do Clock")
-    void blackFridayDependeDoRelogio() {
+    @DisplayName("processMonthlyBilling: aplica BLACKFRIDAY só em novembro quando usa a data do Clock")
+    void processMonthlyBilling_aplicaBlackFridaySoEmNovembro_quandoUsaDataDoClock() {
         BillingCommand comando = comando(CLIENTE, "100", ADESAO_RECENTE, "BLACKFRIDAY");
 
         assertEquals(Money.of("70.00"), servico(FakePaymentGateway.approving(), LocalDate.of(2026, 11, 20))
@@ -123,8 +123,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Desconto de fidelidade usa a data do Clock para contar os meses de assinatura")
-    void fidelidadeDependeDoRelogio() {
+    @DisplayName("processMonthlyBilling: conta os meses pela data do Clock quando calcula a fidelidade")
+    void processMonthlyBilling_contaMesesPelaDataDoClock_quandoCalculaFidelidade() {
         BillingCommand comando = comando(CLIENTE, "100", LocalDate.of(2024, 9, 15), null);
 
         assertEquals(Money.of("90.00"), servico(FakePaymentGateway.approving(), LocalDate.of(2026, 9, 15))
@@ -134,8 +134,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("O valor cobrado, gravado e enviado é o mesmo valor calculado com descontos")
-    void valorComDescontoChegaAsPortas() {
+    @DisplayName("processMonthlyBilling: usa o mesmo valor no gateway, na fatura e no recibo quando há desconto")
+    void processMonthlyBilling_usaMesmoValorEmTodasAsPortas_quandoHaDesconto() {
         FakePaymentGateway payments = FakePaymentGateway.approving();
         BillingCommand comando = new BillingCommand(CLIENTE, Money.of("100"), LocalDate.of(2024, 9, 15),
                 0, null, true, "tok_visa");
@@ -150,8 +150,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Falha do banco ao gravar a fatura chega a quem chamou e interrompe a cobrança")
-    void falhaAoGravarFaturaChegaAQuemChamou() {
+    @DisplayName("processMonthlyBilling: propaga InfrastructureException sem enviar recibo quando a gravação da fatura falha")
+    void processMonthlyBilling_propagaInfrastructureException_quandoGravacaoDaFaturaFalha() {
         InfrastructureException falha = new InfrastructureException("Banco fora do ar", new RuntimeException());
         SubscriptionBillingService servico = new SubscriptionBillingService(customers,
                 fatura -> {
@@ -167,8 +167,8 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Falha do banco ao buscar o cliente chega a quem chamou, sem cobrar nada")
-    void falhaAoBuscarClienteChegaAQuemChamou() {
+    @DisplayName("processMonthlyBilling: propaga InfrastructureException sem cobrar quando a busca do cliente falha")
+    void processMonthlyBilling_propagaInfrastructureExceptionSemCobrar_quandoBuscaDoClienteFalha() {
         FakePaymentGateway payments = FakePaymentGateway.approving();
         SubscriptionBillingService servico = new SubscriptionBillingService(
                 id -> {
