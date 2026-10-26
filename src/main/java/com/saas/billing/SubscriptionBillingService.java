@@ -6,6 +6,7 @@ import com.saas.billing.domain.CustomerStatus;
 import com.saas.billing.domain.InvoiceStatus;
 import com.saas.billing.domain.Money;
 import com.saas.billing.domain.PromoCode;
+import com.saas.billing.port.PaymentGateway;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -25,9 +26,11 @@ public class SubscriptionBillingService {
     private static final String DB_USER = "admin";
     private static final String DB_PASS = "admin123";
 
+    private final PaymentGateway payments;
     private final Clock clock;
 
-    public SubscriptionBillingService(Clock clock) {
+    public SubscriptionBillingService(PaymentGateway payments, Clock clock) {
+        this.payments = Objects.requireNonNull(payments, "payments não pode ser nulo");
         this.clock = Objects.requireNonNull(clock, "clock não pode ser nulo");
     }
 
@@ -84,10 +87,8 @@ public class SubscriptionBillingService {
                     return new BillingResult(calculatedPrice, logs);
                 }
 
-                boolean paymentSuccess = false;
-                String paymentCardToken = command.paymentCardToken();
-                if (paymentCardToken != null && paymentCardToken.startsWith("tok_")) {
-                    paymentSuccess = true;
+                boolean paymentSuccess = payments.charge(command.paymentCardToken(), calculatedPrice);
+                if (paymentSuccess) {
                     logs.add("Pagamento processado com sucesso: " + calculatedPrice.formatted());
                 } else {
                     logs.add("Falha no pagamento do cartão para: " + command.customerId());
