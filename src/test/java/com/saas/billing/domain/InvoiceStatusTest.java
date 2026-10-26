@@ -8,20 +8,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 class InvoiceStatusTest {
 
     @Test
-    @DisplayName("Pagamento aprovado gera fatura PAID")
-    void pagamentoAprovadoGeraPaid() {
+    @DisplayName("of: retorna PAID quando o pagamento é aprovado")
+    void of_retornaPaid_quandoPagamentoAprovado() {
         assertEquals(InvoiceStatus.PAID, InvoiceStatus.of(true));
     }
 
     @Test
-    @DisplayName("Pagamento recusado gera fatura FAILED")
-    void pagamentoRecusadoGeraFailed() {
+    @DisplayName("of: retorna FAILED quando o pagamento é recusado")
+    void of_retornaFailed_quandoPagamentoRecusado() {
         assertEquals(InvoiceStatus.FAILED, InvoiceStatus.of(false));
     }
 
     @Test
-    @DisplayName("Os nomes são os mesmos textos gravados pelo código legado")
-    void nomesIguaisAosDoLegado() {
+    @DisplayName("name: retorna o mesmo texto do legado quando o status é gravado no banco")
+    void name_retornaTextoDoLegado_quandoGravadoNoBanco() {
         assertEquals("PAID", InvoiceStatus.PAID.name());
         assertEquals("FAILED", InvoiceStatus.FAILED.name());
     }
