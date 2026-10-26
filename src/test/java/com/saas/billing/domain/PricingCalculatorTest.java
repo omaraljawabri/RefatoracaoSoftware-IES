@@ -154,4 +154,14 @@ class PricingCalculatorTest {
     void pisoZeroDepoisDaMulta() {
         assertEquals(Money.ZERO, calcular("20", ADESAO_RECENTE, 10, "BLACKFRIDAY", false, NOVEMBRO));
     }
+
+    // ---------- Arredondamento ----------
+
+    @Test
+    @DisplayName("Arredonda só no final, como o legado: 10 × 0,90 × 0,70 + 2% + 0,1% = 6,4323 → R$ 6,43")
+    void arredondaSoNoFinal() {
+        // Arredondando a cada etapa, a multa (0,126) e os juros (0,0063) virariam
+        // 0,13 e 0,01, e o total seria R$ 6,44.
+        assertEquals(Money.of("6.43"), calcular("10", LocalDate.of(2025, 9, 15), 1, null, true, HOJE));
+    }
 }
