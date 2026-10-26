@@ -40,9 +40,9 @@ public class SubscriptionBillingService {
 
     public BillingResult processMonthlyBilling(BillingCommand command) {
 
-        List<String> logs = new ArrayList<>();
+        List<String> messages = new ArrayList<>();
 
-        Money calculatedPrice = pricing.calculate(command, LocalDate.now(clock));
+        Money amount = pricing.calculate(command, LocalDate.now(clock));
 
         try {
             Optional<Customer> customer = customers.findById(command.customerId());
@@ -51,26 +51,26 @@ public class SubscriptionBillingService {
                 String email = customer.get().email();
 
                 if (!customer.get().isActive()) {
-                    logs.add("Cliente inativo. Cobrança cancelada: " + command.customerId());
-                    return new BillingResult(calculatedPrice, logs);
+                    messages.add("Cliente inativo. Cobrança cancelada: " + command.customerId());
+                    return new BillingResult(amount, messages);
                 }
 
-                boolean paymentSuccess = payments.charge(command.paymentCardToken(), calculatedPrice);
+                boolean paymentSuccess = payments.charge(command.paymentCardToken(), amount);
                 if (paymentSuccess) {
-                    logs.add("Pagamento processado com sucesso: " + calculatedPrice.formatted());
+                    messages.add("Pagamento processado com sucesso: " + amount.formatted());
                 } else {
-                    logs.add("Falha no pagamento do cartão para: " + command.customerId());
+                    messages.add("Falha no pagamento do cartão para: " + command.customerId());
                 }
 
-                invoices.save(new Invoice(command.customerId(), calculatedPrice, InvoiceStatus.of(paymentSuccess)));
+                invoices.save(new Invoice(command.customerId(), amount, InvoiceStatus.of(paymentSuccess)));
 
-                notifications.sendInvoice(email, calculatedPrice);
-                logs.add("E-mail disparado para: " + email);
+                notifications.sendInvoice(email, amount);
+                messages.add("E-mail disparado para: " + email);
             }
         } catch (Exception e) {
-            logs.add("Erro fatal no processamento: " + e.getMessage());
+            messages.add("Erro fatal no processamento: " + e.getMessage());
         }
 
-        return new BillingResult(calculatedPrice, logs);
+        return new BillingResult(amount, messages);
     }
 }
