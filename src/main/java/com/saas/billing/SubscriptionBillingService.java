@@ -3,17 +3,16 @@ package com.saas.billing;
 import com.saas.billing.domain.BillingCommand;
 import com.saas.billing.domain.BillingResult;
 import com.saas.billing.domain.Customer;
+import com.saas.billing.domain.Invoice;
 import com.saas.billing.domain.InvoiceStatus;
 import com.saas.billing.domain.Money;
 import com.saas.billing.domain.PromoCode;
 import com.saas.billing.port.CustomerRepository;
+import com.saas.billing.port.InvoiceRepository;
 import com.saas.billing.port.NotificationService;
 import com.saas.billing.port.PaymentGateway;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -23,18 +22,17 @@ import java.util.Optional;
 
 public class SubscriptionBillingService {
 
-    private static final String DB_URL = "jdbc:postgresql://localhost:5432/saas_db";
-    private static final String DB_USER = "admin";
-    private static final String DB_PASS = "admin123";
-
     private final CustomerRepository customers;
+    private final InvoiceRepository invoices;
     private final PaymentGateway payments;
     private final NotificationService notifications;
     private final Clock clock;
 
-    public SubscriptionBillingService(CustomerRepository customers, PaymentGateway payments,
-                                      NotificationService notifications, Clock clock) {
+    public SubscriptionBillingService(CustomerRepository customers, InvoiceRepository invoices,
+                                      PaymentGateway payments, NotificationService notifications,
+                                      Clock clock) {
         this.customers = Objects.requireNonNull(customers, "customers não pode ser nulo");
+        this.invoices = Objects.requireNonNull(invoices, "invoices não pode ser nulo");
         this.payments = Objects.requireNonNull(payments, "payments não pode ser nulo");
         this.notifications = Objects.requireNonNull(notifications, "notifications não pode ser nulo");
         this.clock = Objects.requireNonNull(clock, "clock não pode ser nulo");
@@ -96,14 +94,7 @@ public class SubscriptionBillingService {
                     logs.add("Falha no pagamento do cartão para: " + command.customerId());
                 }
 
-                try (Connection conn = DriverManager.getConnection(DB_URL, DB_USER, DB_PASS)) {
-                    String sqlInvoice = "INSERT INTO invoices(customer_id, amount, status, created_at) VALUES (?, ?, ?, NOW())";
-                    PreparedStatement stmtInvoice = conn.prepareStatement(sqlInvoice);
-                    stmtInvoice.setString(1, command.customerId());
-                    stmtInvoice.setBigDecimal(2, calculatedPrice.amount());
-                    stmtInvoice.setString(3, InvoiceStatus.of(paymentSuccess).name());
-                    stmtInvoice.executeUpdate();
-                }
+                invoices.save(new Invoice(command.customerId(), calculatedPrice, InvoiceStatus.of(paymentSuccess)));
 
                 notifications.sendInvoice(email, calculatedPrice);
                 logs.add("E-mail disparado para: " + email);
