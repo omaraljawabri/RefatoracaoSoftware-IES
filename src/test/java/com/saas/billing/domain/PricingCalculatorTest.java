@@ -28,91 +28,91 @@ class PricingCalculatorTest {
     // ---------- Fidelidade ----------
 
     @Test
-    @DisplayName("Sem fidelidade, cupom, ONG ou atraso, cobra o preço base")
-    void semDescontos() {
+    @DisplayName("calculate: cobra o preço base quando não há desconto nem atraso")
+    void calculate_cobraPrecoBase_quandoSemDescontosNemAtraso() {
         assertEquals(Money.of("100.00"), calcular("100", ADESAO_RECENTE, 0, null, false, HOJE));
     }
 
     @Test
-    @DisplayName("Com exatamente 12 meses ainda não há desconto de fidelidade")
-    void dozeMesesSemDesconto() {
+    @DisplayName("calculate: não dá desconto de fidelidade quando a assinatura tem exatamente 12 meses")
+    void calculate_naoDaDescontoDeFidelidade_quandoAssinaturaTemDozeMeses() {
         assertEquals(Money.of("100.00"), calcular("100", LocalDate.of(2025, 10, 15), 0, null, false, HOJE));
     }
 
     @Test
-    @DisplayName("Com 13 meses, 10% de desconto")
-    void trezeMesesDezPorCento() {
+    @DisplayName("calculate: dá 10% de desconto quando a assinatura tem 13 meses")
+    void calculate_daDezPorCentoDeDesconto_quandoAssinaturaTemTrezeMeses() {
         assertEquals(Money.of("90.00"), calcular("100", LocalDate.of(2025, 9, 15), 0, null, false, HOJE));
     }
 
     @Test
-    @DisplayName("Com exatamente 24 meses, ainda 10% de desconto")
-    void vinteEQuatroMesesDezPorCento() {
+    @DisplayName("calculate: dá 10% de desconto quando a assinatura tem exatamente 24 meses")
+    void calculate_daDezPorCentoDeDesconto_quandoAssinaturaTemVinteEQuatroMeses() {
         assertEquals(Money.of("90.00"), calcular("100", LocalDate.of(2024, 10, 15), 0, null, false, HOJE));
     }
 
     @Test
-    @DisplayName("Com 25 meses, 15% de desconto")
-    void vinteECincoMesesQuinzePorCento() {
+    @DisplayName("calculate: dá 15% de desconto quando a assinatura tem 25 meses")
+    void calculate_daQuinzePorCentoDeDesconto_quandoAssinaturaTemVinteECincoMeses() {
         assertEquals(Money.of("85.00"), calcular("100", LocalDate.of(2024, 9, 15), 0, null, false, HOJE));
     }
 
     @Test
-    @DisplayName("Meses ativos ignoram o dia do mês, como o legado (31/01 a 01/02 = 1 mês)")
-    void mesesAtivosIgnoramODia() {
+    @DisplayName("monthsActive: conta 1 mês quando vai de 31/01 a 01/02, ignorando o dia (como no legado)")
+    void monthsActive_contaUmMes_quandoVaiDe31DeJaneiroA1DeFevereiro() {
         assertEquals(1, PricingCalculator.monthsActive(LocalDate.of(2026, 1, 31), LocalDate.of(2026, 2, 1)));
     }
 
     // ---------- ONG ----------
 
     @Test
-    @DisplayName("ONG tem 30% de desconto")
-    void ongTrintaPorCento() {
+    @DisplayName("calculate: dá 30% de desconto quando o cliente é ONG")
+    void calculate_daTrintaPorCentoDeDesconto_quandoClienteEOng() {
         assertEquals(Money.of("70.00"), calcular("100", ADESAO_RECENTE, 0, null, true, HOJE));
     }
 
     @Test
-    @DisplayName("Fidelidade de 15% + ONG sobre R$ 100,00 resulta em R$ 59,50")
-    void fidelidadeMaisOng() {
+    @DisplayName("calculate: aplica o desconto de ONG sobre o preço com fidelidade quando a ONG tem 25 meses (R$ 59,50)")
+    void calculate_aplicaOngSobrePrecoComFidelidade_quandoOngTemVinteECincoMeses() {
         assertEquals(Money.of("59.50"), calcular("100", LocalDate.of(2024, 9, 15), 0, null, true, HOJE));
     }
 
     // ---------- Cupons ----------
 
     @Test
-    @DisplayName("BLACKFRIDAY em novembro tira R$ 30,00")
-    void blackFridayEmNovembro() {
+    @DisplayName("calculate: desconta R$ 30,00 quando o cupom BLACKFRIDAY é usado em novembro")
+    void calculate_descontaTrintaReais_quandoBlackFridayEmNovembro() {
         assertEquals(Money.of("70.00"), calcular("100", ADESAO_RECENTE, 0, "BLACKFRIDAY", false, NOVEMBRO));
     }
 
     @Test
-    @DisplayName("BLACKFRIDAY fora de novembro não tem efeito")
-    void blackFridayForaDeNovembro() {
+    @DisplayName("calculate: ignora o cupom quando BLACKFRIDAY é usado fora de novembro")
+    void calculate_ignoraCupom_quandoBlackFridayForaDeNovembro() {
         assertEquals(Money.of("100.00"), calcular("100", ADESAO_RECENTE, 0, "BLACKFRIDAY", false, HOJE));
     }
 
     @Test
-    @DisplayName("Cupom é aceito em minúsculas")
-    void cupomEmMinusculas() {
+    @DisplayName("calculate: aplica o cupom quando o código está em minúsculas")
+    void calculate_aplicaCupom_quandoCodigoEmMinusculas() {
         assertEquals(Money.of("70.00"), calcular("100", ADESAO_RECENTE, 0, "blackfriday", false, NOVEMBRO));
     }
 
     @Test
-    @DisplayName("WELCOME10 com até 1 mês de assinatura dá 10% de desconto")
-    void welcomeComUmMes() {
+    @DisplayName("calculate: dá 10% de desconto quando WELCOME10 é usado com até 1 mês de assinatura")
+    void calculate_daDezPorCentoDeDesconto_quandoWelcome10ComAteUmMes() {
         assertEquals(Money.of("90.00"), calcular("100", LocalDate.of(2026, 9, 15), 0, "WELCOME10", false, HOJE));
         assertEquals(Money.of("90.00"), calcular("100", LocalDate.of(2026, 10, 1), 0, "WELCOME10", false, HOJE));
     }
 
     @Test
-    @DisplayName("WELCOME10 com 2 meses de assinatura não tem efeito")
-    void welcomeComDoisMeses() {
+    @DisplayName("calculate: ignora o cupom quando WELCOME10 é usado com 2 meses de assinatura")
+    void calculate_ignoraCupom_quandoWelcome10ComDoisMeses() {
         assertEquals(Money.of("100.00"), calcular("100", LocalDate.of(2026, 8, 15), 0, "WELCOME10", false, HOJE));
     }
 
     @Test
-    @DisplayName("Cupom desconhecido, vazio ou nulo é ignorado")
-    void cupomInvalidoIgnorado() {
+    @DisplayName("calculate: ignora o cupom quando ele é desconhecido, vazio ou nulo")
+    void calculate_ignoraCupom_quandoCupomDesconhecidoVazioOuNulo() {
         assertEquals(Money.of("100.00"), calcular("100", ADESAO_RECENTE, 0, "NATAL50", false, HOJE));
         assertEquals(Money.of("100.00"), calcular("100", ADESAO_RECENTE, 0, "  ", false, HOJE));
         assertEquals(Money.of("100.00"), calcular("100", ADESAO_RECENTE, 0, null, false, HOJE));
@@ -121,22 +121,22 @@ class PricingCalculatorTest {
     // ---------- Ordem dos descontos ----------
 
     @Test
-    @DisplayName("Desconto de ONG vem antes do cupom: (100 × 0,70) − 30 = 40")
-    void ongAntesDoCupom() {
+    @DisplayName("calculate: aplica o desconto de ONG antes do cupom quando a ONG usa BLACKFRIDAY ((100 × 0,70) − 30 = 40)")
+    void calculate_aplicaOngAntesDoCupom_quandoOngUsaBlackFriday() {
         assertEquals(Money.of("40.00"), calcular("100", ADESAO_RECENTE, 0, "BLACKFRIDAY", true, NOVEMBRO));
     }
 
     // ---------- Atraso ----------
 
     @Test
-    @DisplayName("Atraso de 10 dias: multa de 2% + juros de 0,1% ao dia")
-    void multaEJuros() {
+    @DisplayName("calculate: cobra multa de 2% e juros de 0,1% ao dia quando o pagamento está atrasado")
+    void calculate_cobraMultaEJuros_quandoPagamentoAtrasado() {
         assertEquals(Money.of("103.00"), calcular("100", ADESAO_RECENTE, 10, null, false, HOJE));
     }
 
     @Test
-    @DisplayName("Multa e juros incidem sobre o valor já descontado")
-    void multaSobreValorDescontado() {
+    @DisplayName("calculate: cobra multa e juros sobre o valor já descontado quando a ONG paga com atraso")
+    void calculate_cobraMultaSobreValorDescontado_quandoOngPagaComAtraso() {
         // 70,00 + 1,40 (multa) + 0,70 (juros)
         assertEquals(Money.of("72.10"), calcular("100", ADESAO_RECENTE, 10, null, true, HOJE));
     }
@@ -144,22 +144,22 @@ class PricingCalculatorTest {
     // ---------- Piso zero ----------
 
     @Test
-    @DisplayName("Valor negativo vira zero")
-    void pisoZero() {
+    @DisplayName("calculate: retorna zero quando o desconto supera o preço")
+    void calculate_retornaZero_quandoDescontoSuperaPreco() {
         assertEquals(Money.ZERO, calcular("20", ADESAO_RECENTE, 0, "BLACKFRIDAY", false, NOVEMBRO));
     }
 
     @Test
-    @DisplayName("Piso zero é aplicado só depois da multa")
-    void pisoZeroDepoisDaMulta() {
+    @DisplayName("calculate: aplica o piso zero depois da multa quando o desconto supera o preço com atraso")
+    void calculate_aplicaPisoZeroDepoisDaMulta_quandoDescontoSuperaPrecoComAtraso() {
         assertEquals(Money.ZERO, calcular("20", ADESAO_RECENTE, 10, "BLACKFRIDAY", false, NOVEMBRO));
     }
 
     // ---------- Arredondamento ----------
 
     @Test
-    @DisplayName("Arredonda só no final, como o legado: 10 × 0,90 × 0,70 + 2% + 0,1% = 6,4323 → R$ 6,43")
-    void arredondaSoNoFinal() {
+    @DisplayName("calculate: arredonda só no final quando multa e juros são fracionados (6,4323 → R$ 6,43, como no legado)")
+    void calculate_arredondaSoNoFinal_quandoMultaEJurosSaoFracionados() {
         // Arredondando a cada etapa, a multa (0,126) e os juros (0,0063) virariam
         // 0,13 e 0,01, e o total seria R$ 6,44.
         assertEquals(Money.of("6.43"), calcular("10", LocalDate.of(2025, 9, 15), 1, null, true, HOJE));
