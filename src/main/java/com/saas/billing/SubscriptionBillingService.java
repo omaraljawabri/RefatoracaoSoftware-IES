@@ -12,9 +12,11 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.apache.commons.mail.SimpleEmail;
 
 public class SubscriptionBillingService {
@@ -23,12 +25,18 @@ public class SubscriptionBillingService {
     private static final String DB_USER = "admin";
     private static final String DB_PASS = "admin123";
 
+    private final Clock clock;
+
+    public SubscriptionBillingService(Clock clock) {
+        this.clock = Objects.requireNonNull(clock, "clock não pode ser nulo");
+    }
+
     public BillingResult processMonthlyBilling(BillingCommand command) {
 
         List<String> logs = new ArrayList<>();
 
         LocalDate signupDate = command.signupDate();
-        LocalDate today = LocalDate.now();
+        LocalDate today = LocalDate.now(clock);
 
         int monthsActive = (today.getYear() - signupDate.getYear()) * 12 + (today.getMonthValue() - signupDate.getMonthValue());
 
