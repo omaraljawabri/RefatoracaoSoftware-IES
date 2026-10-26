@@ -20,23 +20,23 @@ class PromoCodeTest {
             "WELCOME10, WELCOME10",
             "welcome10, WELCOME10"
     })
-    @DisplayName("Reconhece o cupom sem diferenciar maiúsculas, como o código legado")
-    void reconheceCupom(String texto, PromoCode esperado) {
+    @DisplayName("from: reconhece o cupom quando o código está em qualquer caixa (como no legado)")
+    void from_reconheceCupom_quandoCodigoEmQualquerCaixa(String texto, PromoCode esperado) {
         assertEquals(Optional.of(esperado), PromoCode.from(texto));
     }
 
     @ParameterizedTest
     @NullAndEmptySource
     @ValueSource(strings = {"   ", "NATAL", "WELCOME", "WELCOME100"})
-    @DisplayName("Cupom nulo, em branco ou desconhecido não é reconhecido")
-    void naoReconheceCupomInvalido(String texto) {
+    @DisplayName("from: retorna vazio quando o cupom é nulo, em branco ou desconhecido")
+    void from_retornaVazio_quandoCupomNuloEmBrancoOuDesconhecido(String texto) {
         assertEquals(Optional.empty(), PromoCode.from(texto));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {" BLACKFRIDAY", "BLACKFRIDAY ", " WELCOME10 "})
-    @DisplayName("Cupom com espaços não é reconhecido, como o código legado")
-    void cupomComEspacosNaoEReconhecido(String texto) {
+    @DisplayName("from: retorna vazio quando o código tem espaços (como no legado)")
+    void from_retornaVazio_quandoCodigoTemEspacos(String texto) {
         assertEquals(Optional.empty(), PromoCode.from(texto));
     }
 }
