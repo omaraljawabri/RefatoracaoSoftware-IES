@@ -10,20 +10,20 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class CustomerTest {
 
     @Test
-    @DisplayName("Cliente com status ACTIVE está ativo")
-    void clienteAtivo() {
+    @DisplayName("isActive: retorna true quando o status é ACTIVE")
+    void isActive_retornaTrue_quandoStatusActive() {
         assertTrue(new Customer("cus_123", "a@b.com", CustomerStatus.ACTIVE).isActive());
     }
 
     @Test
-    @DisplayName("Cliente com status INACTIVE não está ativo")
-    void clienteInativo() {
+    @DisplayName("isActive: retorna false quando o status é INACTIVE")
+    void isActive_retornaFalse_quandoStatusInactive() {
         assertFalse(new Customer("cus_123", "a@b.com", CustomerStatus.INACTIVE).isActive());
     }
 
     @Test
-    @DisplayName("Não aceita id nem status nulos")
-    void rejeitaNulos() {
+    @DisplayName("constructor: lança NullPointerException quando o id ou o status são nulos")
+    void constructor_lancaNullPointerException_quandoIdOuStatusNulos() {
         assertThrows(NullPointerException.class, () -> new Customer(null, "a@b.com", CustomerStatus.ACTIVE));
         assertThrows(NullPointerException.class, () -> new Customer("cus_123", "a@b.com", null));
     }
