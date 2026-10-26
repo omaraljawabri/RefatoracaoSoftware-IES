@@ -28,3 +28,35 @@ No IntelliJ, basta abrir a pasta: o `pom.xml` é detectado automaticamente.
   `"calculate: ignora o cupom quando BLACKFRIDAY é usado fora de novembro"`.
 - Testes que documentam um comportamento mantido do legado terminam o `@DisplayName` com
   `(como no legado)`.
+
+## Configuração para rodar com a infraestrutura real
+
+`BillingServiceFactory.fromEnvironment()` monta o serviço com PostgreSQL e SMTP e lê a
+configuração destas variáveis de ambiente:
+
+| Variável | O que guarda | Exemplo |
+|---|---|---|
+| `BILLING_DB_URL` | URL JDBC do banco | `jdbc:postgresql://localhost:5432/saas_db` |
+| `BILLING_DB_USER` | Usuário do banco | `admin` |
+| `BILLING_DB_PASSWORD` | Senha do banco | (não versionar) |
+| `BILLING_SMTP_HOST` | Servidor SMTP | `smtp.empresa.com` |
+| `BILLING_SMTP_PORT` | Porta SMTP | `587` |
+| `BILLING_SMTP_FROM` | Remetente dos recibos | `billing@empresa.com` |
+
+Se alguma estiver ausente, a criação do serviço falha com uma mensagem que diz qual variável falta.
+
+**Linux/macOS** (vale para o terminal atual; para tornar permanente, coloque no `~/.bashrc`):
+
+```bash
+export BILLING_DB_URL=jdbc:postgresql://localhost:5432/saas_db
+export BILLING_DB_USER=admin
+export BILLING_DB_PASSWORD='sua-senha'
+export BILLING_SMTP_HOST=smtp.empresa.com
+export BILLING_SMTP_PORT=587
+export BILLING_SMTP_FROM=billing@empresa.com
+```
+
+**Windows (PowerShell):** `$env:BILLING_DB_URL = "jdbc:postgresql://localhost:5432/saas_db"`, e
+assim por diante.
+
+**IntelliJ:** Run → Edit Configurations… → Environment variables.
