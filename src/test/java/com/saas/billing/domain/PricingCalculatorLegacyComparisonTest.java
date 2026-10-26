@@ -72,8 +72,8 @@ class PricingCalculatorLegacyComparisonTest {
     }
 
     @Test
-    @DisplayName("Em todas as combinações, o preço novo fica a no máximo meio centavo do legado")
-    void mesmoResultadoDoLegado() {
+    @DisplayName("calculate: fica a no máximo meio centavo do legado quando comparado em todas as combinações")
+    void calculate_ficaAMeioCentavoDoLegado_quandoComparadoEmTodasAsCombinacoes() {
         List<String> divergencias = new ArrayList<>();
         int casos = 0;
 
