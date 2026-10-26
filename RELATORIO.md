@@ -40,9 +40,10 @@ As linhas citadas se referem ao código legado original (`SubscriptionBillingSer
 | R11 | A fatura é gravada com `PAID` ou `FAILED` conforme o pagamento | L82–87 | `InvoiceStatus`, `InvoiceRepository` | `SubscriptionBillingServiceTest` |
 | R12 | A notificação do recibo é solicitada depois da gravação da fatura | L89–98 | `NotificationService` | `SubscriptionBillingServiceTest` |
 
-Além dos testes por regra, o `PricingCalculatorLegacyComparisonTest` (golden master) compara o
-`PricingCalculator` com uma cópia literal da fórmula do legado em 18.720 combinações de preço,
-meses de assinatura, ONG, cupom, dias de atraso e data.
+Além dos testes por regra, há um teste de comparação com o legado
+(`PricingCalculatorLegacyComparisonTest`): ele calcula o preço com o `PricingCalculator` e com uma
+cópia literal da fórmula do legado em 18.720 combinações de preço, meses de assinatura, ONG, cupom,
+dias de atraso e data, e verifica se os dois resultados ficam a no máximo meio centavo um do outro.
 
 ### 1.3 Comportamentos questionáveis preservados de propósito
 
@@ -131,7 +132,7 @@ propósito e estão cobertas por testes.
 
 | # | Antes | Depois | Motivo |
 |---|---|---|---|
-| M1 | Valores em `double`, sem arredondamento: mensagens e banco recebiam algo como `59.49999999999999` | Valores com 2 casas (`HALF_EVEN`, o arredondamento bancário): mensagens no formato `R$ 59,50` e fatura gravada com `setBigDecimal` | Eliminar o erro de ponto flutuante em valores cobrados. O cálculo continua igual: o resultado fica a no máximo meio centavo do valor do legado (golden master) |
+| M1 | Valores em `double`, sem arredondamento: mensagens e banco recebiam algo como `59.49999999999999` | Valores com 2 casas (`HALF_EVEN`, o arredondamento bancário): mensagens no formato `R$ 59,50` e fatura gravada com `setBigDecimal` | Eliminar o erro de ponto flutuante em valores cobrados. O cálculo continua igual: o resultado fica a no máximo meio centavo do valor do legado, o que é verificado pelo teste de comparação com o legado |
 | M2 | `processMonthlyBilling(String, String, double, String, int, String, boolean, String)` devolvendo `List<String>` | `processMonthlyBilling(BillingCommand)` devolvendo `BillingResult` | Remover a lista longa de parâmetros, o parâmetro morto `planType` e o retorno ambíguo. Quem chamava com texto usa `BillingCommand.from(...)`, que faz as mesmas conversões do legado |
 | M3 | Credenciais e servidores fixos no código | Configuração por variáveis de ambiente (ver o README). Variável ausente gera `IllegalStateException` com o nome dela | Tirar a senha do Git e permitir trocar de ambiente sem recompilar |
 | M4 | Uma conexão aberta para a consulta e o `INSERT`, com `PreparedStatement` e `ResultSet` sem fechar | Cada repositório abre e fecha a própria conexão e todos os recursos | Corrigir o vazamento de recursos. Como o legado usava autocommit, não havia transação compartilhada a perder |
