@@ -18,8 +18,8 @@ class CommonsEmailNotificationServiceTest {
             new SmtpSettings("smtp.empresa.com", 587, "billing@empresa.com"));
 
     @Test
-    @DisplayName("Monta o e-mail com a configuração, o assunto e o destinatário do legado")
-    void montaOEmail() throws EmailException {
+    @DisplayName("buildInvoiceEmail: preenche servidor, remetente, assunto e destinatário quando usa a configuração do legado")
+    void buildInvoiceEmail_preencheServidorRemetenteAssuntoEDestinatario_quandoUsaConfiguracaoDoLegado() throws EmailException {
         SimpleEmail email = service.buildInvoiceEmail("cliente@exemplo.com", Money.of("59.50"));
 
         assertEquals("smtp.empresa.com", email.getHostName());
@@ -30,21 +30,21 @@ class CommonsEmailNotificationServiceTest {
     }
 
     @Test
-    @DisplayName("O texto do e-mail traz o valor formatado em reais")
-    void textoComValorFormatado() {
+    @DisplayName("invoiceText: inclui o valor formatado em reais quando recebe um Money")
+    void invoiceText_incluiValorEmReais_quandoRecebeMoney() {
         assertEquals("Olá! Sua fatura foi processada no valor de R$ 59,50",
                 CommonsEmailNotificationService.invoiceText(Money.of("59.50")));
     }
 
     @Test
-    @DisplayName("Com endereço válido, não lança erro e não precisa de servidor SMTP")
-    void naoEnviaNemPrecisaDeServidor() {
+    @DisplayName("sendInvoice: não lança erro nem acessa o servidor SMTP quando o endereço é válido")
+    void sendInvoice_naoLancaErroNemAcessaServidor_quandoEnderecoValido() {
         assertDoesNotThrow(() -> service.sendInvoice("cliente@exemplo.com", Money.of("59.50")));
     }
 
     @Test
-    @DisplayName("Endereço inválido vira InfrastructureException com a causa original")
-    void enderecoInvalidoViraErroDeInfraestrutura() {
+    @DisplayName("sendInvoice: lança InfrastructureException com a causa original quando o endereço é inválido")
+    void sendInvoice_lancaInfrastructureException_quandoEnderecoInvalido() {
         InfrastructureException erro = assertThrows(InfrastructureException.class,
                 () -> service.sendInvoice("", Money.of("59.50")));
 
