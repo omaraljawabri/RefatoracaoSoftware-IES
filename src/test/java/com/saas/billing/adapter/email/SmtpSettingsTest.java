@@ -20,16 +20,16 @@ class SmtpSettingsTest {
     }
 
     @Test
-    @DisplayName("Lê servidor, porta e remetente das variáveis de ambiente")
-    void leAsVariaveis() {
+    @DisplayName("from: lê servidor, porta e remetente quando as variáveis estão definidas")
+    void from_leServidorPortaERemetente_quandoVariaveisDefinidas() {
         SmtpSettings settings = SmtpSettings.from(ambienteCompleto()::get);
 
         assertEquals(new SmtpSettings("smtp.empresa.com", 587, "billing@empresa.com"), settings);
     }
 
     @Test
-    @DisplayName("Variável ausente gera erro com o nome dela")
-    void variavelAusente() {
+    @DisplayName("from: lança erro com o nome da variável quando ela está ausente")
+    void from_lancaErroComNomeDaVariavel_quandoVariavelAusente() {
         Map<String, String> env = ambienteCompleto();
         env.remove("BILLING_SMTP_HOST");
 
@@ -39,8 +39,8 @@ class SmtpSettingsTest {
     }
 
     @Test
-    @DisplayName("Variável em branco gera erro com o nome dela")
-    void variavelEmBranco() {
+    @DisplayName("from: lança erro com o nome da variável quando ela está em branco")
+    void from_lancaErroComNomeDaVariavel_quandoVariavelEmBranco() {
         Map<String, String> env = ambienteCompleto();
         env.put("BILLING_SMTP_FROM", "   ");
 
@@ -50,8 +50,8 @@ class SmtpSettingsTest {
     }
 
     @Test
-    @DisplayName("Porta que não é número gera erro claro")
-    void portaInvalida() {
+    @DisplayName("from: lança erro claro quando a porta não é numérica")
+    void from_lancaErroClaro_quandoPortaNaoENumerica() {
         Map<String, String> env = ambienteCompleto();
         env.put("BILLING_SMTP_PORT", "abc");
 
