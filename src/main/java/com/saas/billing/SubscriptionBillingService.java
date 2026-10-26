@@ -6,13 +6,12 @@ import com.saas.billing.domain.Customer;
 import com.saas.billing.domain.Invoice;
 import com.saas.billing.domain.InvoiceStatus;
 import com.saas.billing.domain.Money;
-import com.saas.billing.domain.PromoCode;
+import com.saas.billing.domain.PricingCalculator;
 import com.saas.billing.port.CustomerRepository;
 import com.saas.billing.port.InvoiceRepository;
 import com.saas.billing.port.NotificationService;
 import com.saas.billing.port.PaymentGateway;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -27,6 +26,7 @@ public class SubscriptionBillingService {
     private final PaymentGateway payments;
     private final NotificationService notifications;
     private final Clock clock;
+    private final PricingCalculator pricing = new PricingCalculator();
 
     public SubscriptionBillingService(CustomerRepository customers, InvoiceRepository invoices,
                                       PaymentGateway payments, NotificationService notifications,
@@ -42,39 +42,7 @@ public class SubscriptionBillingService {
 
         List<String> logs = new ArrayList<>();
 
-        LocalDate signupDate = command.signupDate();
-        LocalDate today = LocalDate.now(clock);
-
-        int monthsActive = (today.getYear() - signupDate.getYear()) * 12 + (today.getMonthValue() - signupDate.getMonthValue());
-
-        Money basePrice = command.basePrice();
-        Money calculatedPrice = basePrice;
-
-        if (monthsActive > 24) {
-            calculatedPrice = calculatedPrice.minus(basePrice.times(new BigDecimal("0.15"))); // 15% após 2 anos
-        } else if (monthsActive > 12) {
-            calculatedPrice = calculatedPrice.minus(basePrice.times(new BigDecimal("0.10"))); // 10% após 1 ano
-        }
-
-        if (command.nonProfit()) {
-            calculatedPrice = calculatedPrice.times(new BigDecimal("0.70")); // 30% off para ONGs
-        }
-
-        PromoCode promoCode = PromoCode.from(command.promoCode()).orElse(null);
-        if (promoCode == PromoCode.BLACKFRIDAY && today.getMonthValue() == 11) {
-            calculatedPrice = calculatedPrice.minus(Money.of("30.00"));
-        } else if (promoCode == PromoCode.WELCOME10 && monthsActive <= 1) {
-            calculatedPrice = calculatedPrice.times(new BigDecimal("0.90"));
-        }
-
-        if (command.overdueDays() > 0) {
-            Money penalty = calculatedPrice.times(new BigDecimal("0.02"));
-            Money dailyInterest = calculatedPrice.times(
-                    new BigDecimal("0.001").multiply(BigDecimal.valueOf(command.overdueDays())));
-            calculatedPrice = calculatedPrice.plus(penalty).plus(dailyInterest);
-        }
-
-        calculatedPrice = calculatedPrice.atLeastZero();
+        Money calculatedPrice = pricing.calculate(command, LocalDate.now(clock));
 
         try {
             Optional<Customer> customer = customers.findById(command.customerId());
