@@ -19,20 +19,20 @@ class BillingCommandTest {
     }
 
     @Test
-    @DisplayName("Converte o preço base para Money")
-    void converteOPrecoParaMoney() {
+    @DisplayName("from: converte o preço para Money quando recebe um double")
+    void from_convertePrecoParaMoney_quandoRecebeDouble() {
         assertEquals(Money.of("99.90"), comandoPadrao().basePrice());
     }
 
     @Test
-    @DisplayName("Converte a data de adesão de texto para LocalDate")
-    void converteADataDeAdesao() {
+    @DisplayName("from: converte a data de adesão quando recebe texto no formato ISO")
+    void from_converteDataDeAdesao_quandoRecebeTextoIso() {
         assertEquals(LocalDate.of(2024, 1, 31), comandoPadrao().signupDate());
     }
 
     @Test
-    @DisplayName("Mantém os demais dados como recebidos")
-    void mantemOsDemaisDados() {
+    @DisplayName("from: mantém os demais dados quando recebe valores válidos")
+    void from_mantemDemaisDados_quandoRecebeValoresValidos() {
         BillingCommand comando = comandoPadrao();
 
         assertEquals("cus_123", comando.customerId());
@@ -43,8 +43,8 @@ class BillingCommandTest {
     }
 
     @Test
-    @DisplayName("Aceita cupom e token nulos, como o código legado")
-    void aceitaCupomETokenNulos() {
+    @DisplayName("from: aceita cupom e token nulos quando não são informados (como no legado)")
+    void from_aceitaCupomETokenNulos_quandoNaoInformados() {
         BillingCommand comando = BillingCommand.from("cus_123", 50.0, "2024-01-31", 0, null, false, null);
 
         assertNull(comando.promoCode());
@@ -53,22 +53,22 @@ class BillingCommandTest {
     }
 
     @Test
-    @DisplayName("Data inválida lança DateTimeParseException, como o código legado")
-    void dataInvalidaMantemOErroAtual() {
+    @DisplayName("from: lança DateTimeParseException quando a data é inválida (como no legado)")
+    void from_lancaDateTimeParseException_quandoDataInvalida() {
         assertThrows(DateTimeParseException.class,
                 () -> BillingCommand.from("cus_123", 50.0, "31/01/2024", 0, null, false, null));
     }
 
     @Test
-    @DisplayName("Data nula lança NullPointerException, como o código legado")
-    void dataNulaMantemOErroAtual() {
+    @DisplayName("from: lança NullPointerException quando a data é nula (como no legado)")
+    void from_lancaNullPointerException_quandoDataNula() {
         assertThrows(NullPointerException.class,
                 () -> BillingCommand.from("cus_123", 50.0, null, 0, null, false, null));
     }
 
     @Test
-    @DisplayName("Construtor direto não aceita preço nem data nulos")
-    void construtorRejeitaPrecoEDataNulos() {
+    @DisplayName("constructor: lança NullPointerException quando o preço ou a data são nulos")
+    void constructor_lancaNullPointerException_quandoPrecoOuDataNulos() {
         assertThrows(NullPointerException.class,
                 () -> new BillingCommand("cus_123", null, LocalDate.of(2024, 1, 31), 0, null, false, null));
         assertThrows(NullPointerException.class,
@@ -76,8 +76,8 @@ class BillingCommandTest {
     }
 
     @Test
-    @DisplayName("Comandos com os mesmos dados são iguais")
-    void comandosComMesmosDadosSaoIguais() {
+    @DisplayName("equals: retorna true e o mesmo hashCode quando os dados são iguais")
+    void equals_retornaTrue_quandoMesmosDados() {
         assertEquals(comandoPadrao(), comandoPadrao());
         assertEquals(comandoPadrao().hashCode(), comandoPadrao().hashCode());
     }
