@@ -12,6 +12,7 @@ import com.saas.billing.fake.InMemoryCustomerRepository;
 import com.saas.billing.fake.InMemoryInvoiceRepository;
 import com.saas.billing.fake.RecordingNotificationService;
 import com.saas.billing.fake.RecordingNotificationService.SentInvoice;
+import com.saas.billing.port.exception.InfrastructureException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
@@ -144,5 +145,22 @@ class SubscriptionBillingServiceTest {
         assertEquals(Money.of("59.50"), invoices.saved().get(0).amount());
         assertEquals(Money.of("59.50"), notifications.sent().get(0).amount());
         assertEquals("Pagamento processado com sucesso: R$ 59,50", resultado.messages().get(0));
+    }
+
+    @Test
+    @DisplayName("Falha do banco ao gravar a fatura vira mensagem de erro, como o código legado (catch genérico)")
+    void falhaDeInfraestruturaViraMensagem() {
+        SubscriptionBillingService servico = new SubscriptionBillingService(customers,
+                fatura -> {
+                    throw new InfrastructureException("Banco fora do ar", new RuntimeException());
+                },
+                FakePaymentGateway.approving(), notifications, relogioEm(HOJE));
+
+        BillingResult resultado = servico.processMonthlyBilling(comando(CLIENTE, "100", ADESAO_RECENTE, null));
+
+        assertEquals(List.of(
+                "Pagamento processado com sucesso: R$ 100,00",
+                "Erro fatal no processamento: Banco fora do ar"), resultado.messages());
+        assertTrue(notifications.sent().isEmpty());
     }
 }
