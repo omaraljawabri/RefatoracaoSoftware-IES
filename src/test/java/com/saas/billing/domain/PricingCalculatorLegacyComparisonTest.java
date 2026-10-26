@@ -12,8 +12,9 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Golden master: compara o {@link PricingCalculator} com a fórmula original do
- * código legado (commit {@code 36d0970}, linhas 24–57), copiada sem alterações.
+ * Teste de comparação com o legado: verifica se o {@link PricingCalculator} dá o
+ * mesmo resultado da fórmula original do código legado (commit {@code 36d0970},
+ * linhas 24–57), copiada sem alterações, em todas as combinações de entrada.
  *
  * O legado calcula em {@code double} e nunca arredonda; o novo cálculo devolve
  * 2 casas. Por isso o resultado novo deve estar a no máximo meio centavo do
