@@ -2,6 +2,7 @@ package com.saas.billing;
 
 import com.saas.billing.domain.BillingCommand;
 import com.saas.billing.domain.BillingResult;
+import com.saas.billing.domain.CustomerStatus;
 import com.saas.billing.domain.Money;
 
 import java.math.BigDecimal;
@@ -68,9 +69,9 @@ public class SubscriptionBillingService {
 
             if (rs.next()) {
                 String email = rs.getString("email");
-                String status = rs.getString("status");
+                CustomerStatus status = CustomerStatus.from(rs.getString("status"));
 
-                if (!"ACTIVE".equalsIgnoreCase(status)) {
+                if (status != CustomerStatus.ACTIVE) {
                     logs.add("Cliente inativo. Cobrança cancelada: " + command.customerId());
                     return new BillingResult(calculatedPrice, logs);
                 }
