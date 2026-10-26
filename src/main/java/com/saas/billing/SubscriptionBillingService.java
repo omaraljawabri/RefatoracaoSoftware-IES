@@ -3,6 +3,7 @@ package com.saas.billing;
 import com.saas.billing.domain.BillingCommand;
 import com.saas.billing.domain.BillingResult;
 import com.saas.billing.domain.CustomerStatus;
+import com.saas.billing.domain.InvoiceStatus;
 import com.saas.billing.domain.Money;
 
 import java.math.BigDecimal;
@@ -89,7 +90,7 @@ public class SubscriptionBillingService {
                 PreparedStatement stmtInvoice = conn.prepareStatement(sqlInvoice);
                 stmtInvoice.setString(1, command.customerId());
                 stmtInvoice.setBigDecimal(2, calculatedPrice.amount());
-                stmtInvoice.setString(3, paymentSuccess ? "PAID" : "FAILED");
+                stmtInvoice.setString(3, InvoiceStatus.of(paymentSuccess).name());
                 stmtInvoice.executeUpdate();
 
                 SimpleEmail emailSender = new SimpleEmail();
