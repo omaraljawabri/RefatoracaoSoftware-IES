@@ -12,8 +12,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 class BillingServiceFactoryTest {
 
     @Test
-    @DisplayName("Monta o serviço com os adaptadores reais sem abrir conexão nem servidor SMTP")
-    void montaOServicoSemAcessarInfraestrutura() {
+    @DisplayName("create: monta o serviço sem abrir conexão nem servidor SMTP quando recebe a configuração")
+    void create_montaServicoSemAcessarInfraestrutura_quandoRecebeConfiguracao() {
         assertNotNull(BillingServiceFactory.create(
                 new JdbcConnectionFactory("jdbc:postgresql://localhost:5432/saas_db", "admin", "segredo"),
                 new SmtpSettings("smtp.empresa.com", 587, "billing@empresa.com"),
