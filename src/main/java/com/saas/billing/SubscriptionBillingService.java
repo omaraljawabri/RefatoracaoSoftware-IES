@@ -5,6 +5,7 @@ import com.saas.billing.domain.BillingResult;
 import com.saas.billing.domain.CustomerStatus;
 import com.saas.billing.domain.InvoiceStatus;
 import com.saas.billing.domain.Money;
+import com.saas.billing.domain.PromoCode;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -44,13 +45,11 @@ public class SubscriptionBillingService {
             calculatedPrice = calculatedPrice.times(new BigDecimal("0.70")); // 30% off para ONGs
         }
 
-        String promoCode = command.promoCode();
-        if (promoCode != null && !promoCode.trim().isEmpty()) {
-            if (promoCode.equalsIgnoreCase("BLACKFRIDAY") && today.getMonthValue() == 11) {
-                calculatedPrice = calculatedPrice.minus(Money.of("30.00"));
-            } else if (promoCode.equalsIgnoreCase("WELCOME10") && monthsActive <= 1) {
-                calculatedPrice = calculatedPrice.times(new BigDecimal("0.90"));
-            }
+        PromoCode promoCode = PromoCode.from(command.promoCode()).orElse(null);
+        if (promoCode == PromoCode.BLACKFRIDAY && today.getMonthValue() == 11) {
+            calculatedPrice = calculatedPrice.minus(Money.of("30.00"));
+        } else if (promoCode == PromoCode.WELCOME10 && monthsActive <= 1) {
+            calculatedPrice = calculatedPrice.times(new BigDecimal("0.90"));
         }
 
         if (command.overdueDays() > 0) {
