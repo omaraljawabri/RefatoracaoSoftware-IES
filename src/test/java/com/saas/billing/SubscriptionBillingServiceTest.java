@@ -21,6 +21,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SubscriptionBillingServiceTest {
 
@@ -74,5 +75,36 @@ class SubscriptionBillingServiceTest {
                 "E-mail disparado para: " + EMAIL), resultado.messages());
         assertEquals(List.of(new Invoice(CLIENTE, Money.of("100.00"), InvoiceStatus.FAILED)), invoices.saved());
         assertEquals(List.of(new SentInvoice(EMAIL, Money.of("100.00"))), notifications.sent());
+    }
+
+    @Test
+    @DisplayName("Cliente inativo: cancela sem cobrar, sem fatura e sem recibo, mas devolve o valor calculado")
+    void clienteInativo() {
+        customers.add(new Customer("cus_2", "bia@exemplo.com", CustomerStatus.INACTIVE));
+        FakePaymentGateway payments = FakePaymentGateway.approving();
+
+        BillingResult resultado = servico(payments, HOJE)
+                .processMonthlyBilling(comando("cus_2", "100", ADESAO_RECENTE, null));
+
+        assertEquals(Money.of("100.00"), resultado.amount());
+        assertEquals(List.of("Cliente inativo. Cobrança cancelada: cus_2"), resultado.messages());
+        assertTrue(payments.charges().isEmpty());
+        assertTrue(invoices.saved().isEmpty());
+        assertTrue(notifications.sent().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Cliente inexistente: não faz nada e não gera nenhuma mensagem, como o código legado")
+    void clienteInexistente() {
+        FakePaymentGateway payments = FakePaymentGateway.approving();
+
+        BillingResult resultado = servico(payments, HOJE)
+                .processMonthlyBilling(comando("cus_desconhecido", "100", ADESAO_RECENTE, null));
+
+        assertEquals(Money.of("100.00"), resultado.amount());
+        assertTrue(resultado.messages().isEmpty());
+        assertTrue(payments.charges().isEmpty());
+        assertTrue(invoices.saved().isEmpty());
+        assertTrue(notifications.sent().isEmpty());
     }
 }
