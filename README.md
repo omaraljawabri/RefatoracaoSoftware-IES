@@ -1,8 +1,8 @@
 # RefatoracaoSoftware-IES
 
-Repositório da atividade de refatoração da disciplina Implantação e Entrega de Software (2026/2),
-INF/UFG. Parte do código legado `SubscriptionBillingService` da SaaS Billing Co. e chega a uma
-arquitetura de portas e adaptadores, sem mudar as regras de negócio.
+Repositório da atividade de refatoração da disciplina Implantação e Entrega de Software (2026/2).
+Parte do código legado `SubscriptionBillingService` da SaaS Billing Co. e chega a uma arquitetura
+de portas e adaptadores, sem mudar as regras de negócio.
 
 ## Requisitos
 
