@@ -22,6 +22,8 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class SubscriptionBillingServiceTest {
@@ -148,19 +150,36 @@ class SubscriptionBillingServiceTest {
     }
 
     @Test
-    @DisplayName("Falha do banco ao gravar a fatura vira mensagem de erro, como o código legado (catch genérico)")
-    void falhaDeInfraestruturaViraMensagem() {
+    @DisplayName("Falha do banco ao gravar a fatura chega a quem chamou e interrompe a cobrança")
+    void falhaAoGravarFaturaChegaAQuemChamou() {
+        InfrastructureException falha = new InfrastructureException("Banco fora do ar", new RuntimeException());
         SubscriptionBillingService servico = new SubscriptionBillingService(customers,
                 fatura -> {
-                    throw new InfrastructureException("Banco fora do ar", new RuntimeException());
+                    throw falha;
                 },
                 FakePaymentGateway.approving(), notifications, relogioEm(HOJE));
 
-        BillingResult resultado = servico.processMonthlyBilling(comando(CLIENTE, "100", ADESAO_RECENTE, null));
+        InfrastructureException erro = assertThrows(InfrastructureException.class,
+                () -> servico.processMonthlyBilling(comando(CLIENTE, "100", ADESAO_RECENTE, null)));
 
-        assertEquals(List.of(
-                "Pagamento processado com sucesso: R$ 100,00",
-                "Erro fatal no processamento: Banco fora do ar"), resultado.messages());
+        assertSame(falha, erro);
         assertTrue(notifications.sent().isEmpty());
+    }
+
+    @Test
+    @DisplayName("Falha do banco ao buscar o cliente chega a quem chamou, sem cobrar nada")
+    void falhaAoBuscarClienteChegaAQuemChamou() {
+        FakePaymentGateway payments = FakePaymentGateway.approving();
+        SubscriptionBillingService servico = new SubscriptionBillingService(
+                id -> {
+                    throw new InfrastructureException("Banco fora do ar", new RuntimeException());
+                },
+                invoices, payments, notifications, relogioEm(HOJE));
+
+        assertThrows(InfrastructureException.class,
+                () -> servico.processMonthlyBilling(comando(CLIENTE, "100", ADESAO_RECENTE, null)));
+
+        assertTrue(payments.charges().isEmpty());
+        assertTrue(invoices.saved().isEmpty());
     }
 }
