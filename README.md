@@ -60,3 +60,17 @@ export BILLING_SMTP_FROM=billing@empresa.com
 assim por diante.
 
 **IntelliJ:** Run → Edit Configurations… → Environment variables.
+
+## Uso
+
+```java
+SubscriptionBillingService service = BillingServiceFactory.fromEnvironment();
+
+BillingResult result = service.processMonthlyBilling(
+        BillingCommand.from("cus_123", 99.90, "2024-01-31", 0, "WELCOME10", false, "tok_visa"));
+
+result.amount();    // valor cobrado
+result.messages();  // mensagens do processamento
+```
+
+Falhas de banco ou de e-mail lançam `InfrastructureException`.
