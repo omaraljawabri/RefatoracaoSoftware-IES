@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class InvoiceTest {
 
     @Test
-    @DisplayName("Guarda cliente, valor e status")
-    void guardaOsDados() {
+    @DisplayName("constructor: guarda cliente, valor e status quando os dados são válidos")
+    void constructor_guardaClienteValorEStatus_quandoDadosValidos() {
         Invoice fatura = new Invoice("cus_123", Money.of("59.50"), InvoiceStatus.PAID);
 
         assertEquals("cus_123", fatura.customerId());
@@ -19,8 +19,8 @@ class InvoiceTest {
     }
 
     @Test
-    @DisplayName("Não aceita cliente, valor nem status nulos")
-    void rejeitaNulos() {
+    @DisplayName("constructor: lança NullPointerException quando algum campo é nulo")
+    void constructor_lancaNullPointerException_quandoAlgumCampoNulo() {
         assertThrows(NullPointerException.class, () -> new Invoice(null, Money.of(10), InvoiceStatus.PAID));
         assertThrows(NullPointerException.class, () -> new Invoice("cus_123", null, InvoiceStatus.PAID));
         assertThrows(NullPointerException.class, () -> new Invoice("cus_123", Money.of(10), null));
