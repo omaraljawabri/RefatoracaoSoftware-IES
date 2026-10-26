@@ -55,12 +55,7 @@ public class SubscriptionBillingService {
                     return new BillingResult(amount, messages);
                 }
 
-                boolean paymentSuccess = payments.charge(command.paymentCardToken(), amount);
-                if (paymentSuccess) {
-                    messages.add("Pagamento processado com sucesso: " + amount.formatted());
-                } else {
-                    messages.add("Falha no pagamento do cartão para: " + command.customerId());
-                }
+                boolean paymentSuccess = charge(command, amount, messages);
 
                 invoices.save(new Invoice(command.customerId(), amount, InvoiceStatus.of(paymentSuccess)));
 
@@ -72,5 +67,16 @@ public class SubscriptionBillingService {
         }
 
         return new BillingResult(amount, messages);
+    }
+
+    /** Cobra no cartão e registra a mensagem de sucesso ou de falha do pagamento. */
+    private boolean charge(BillingCommand command, Money amount, List<String> messages) {
+        boolean paymentSuccess = payments.charge(command.paymentCardToken(), amount);
+        if (paymentSuccess) {
+            messages.add("Pagamento processado com sucesso: " + amount.formatted());
+        } else {
+            messages.add("Falha no pagamento do cartão para: " + command.customerId());
+        }
+        return paymentSuccess;
     }
 }
