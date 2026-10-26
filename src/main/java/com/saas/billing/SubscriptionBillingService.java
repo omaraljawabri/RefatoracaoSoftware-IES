@@ -11,6 +11,7 @@ import com.saas.billing.port.CustomerRepository;
 import com.saas.billing.port.InvoiceRepository;
 import com.saas.billing.port.NotificationService;
 import com.saas.billing.port.PaymentGateway;
+import com.saas.billing.port.exception.InfrastructureException;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -43,17 +44,16 @@ public class SubscriptionBillingService {
      *
      * <p>Cliente inexistente não gera cobrança nem mensagem; cliente inativo tem
      * a cobrança cancelada. Em ambos os casos o valor calculado é devolvido.</p>
+     *
+     * @throws InfrastructureException se o banco, o gateway de pagamento ou o
+     *         envio do recibo falhar; a falha não é mais escondida numa mensagem
      */
     public BillingResult processMonthlyBilling(BillingCommand command) {
         List<String> messages = new ArrayList<>();
         Money amount = pricing.calculate(command, LocalDate.now(clock));
 
-        try {
-            customers.findById(command.customerId())
-                    .ifPresent(customer -> bill(customer, command, amount, messages));
-        } catch (Exception e) {
-            messages.add("Erro fatal no processamento: " + e.getMessage());
-        }
+        customers.findById(command.customerId())
+                .ifPresent(customer -> bill(customer, command, amount, messages));
 
         return new BillingResult(amount, messages);
     }
