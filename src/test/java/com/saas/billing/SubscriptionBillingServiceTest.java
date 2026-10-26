@@ -62,4 +62,17 @@ class SubscriptionBillingServiceTest {
         assertEquals(List.of(new Invoice(CLIENTE, Money.of("100.00"), InvoiceStatus.PAID)), invoices.saved());
         assertEquals(List.of(new SentInvoice(EMAIL, Money.of("100.00"))), notifications.sent());
     }
+
+    @Test
+    @DisplayName("Pagamento recusado: grava fatura FAILED e ainda envia o recibo, como o código legado")
+    void pagamentoRecusado() {
+        BillingResult resultado = servico(FakePaymentGateway.declining(), HOJE)
+                .processMonthlyBilling(comando(CLIENTE, "100", ADESAO_RECENTE, null));
+
+        assertEquals(List.of(
+                "Falha no pagamento do cartão para: " + CLIENTE,
+                "E-mail disparado para: " + EMAIL), resultado.messages());
+        assertEquals(List.of(new Invoice(CLIENTE, Money.of("100.00"), InvoiceStatus.FAILED)), invoices.saved());
+        assertEquals(List.of(new SentInvoice(EMAIL, Money.of("100.00"))), notifications.sent());
+    }
 }
