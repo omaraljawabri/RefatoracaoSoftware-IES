@@ -9,8 +9,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 class JdbcCustomerRepositoryTest {
 
     @Test
-    @DisplayName("Falha do banco chega a quem chamou como InfrastructureException, sem ser silenciada")
-    void falhaDoBancoNaoESilenciada() {
+    @DisplayName("findById: lança InfrastructureException quando o banco falha")
+    void findById_lancaInfrastructureException_quandoBancoFalha() {
         JdbcCustomerRepository repositorio = new JdbcCustomerRepository(
                 new JdbcConnectionFactory("jdbc:inexistente:teste", "u", "p"));
 
